@@ -118,16 +118,7 @@ class Player(GameObject):
                 j += 1
             i += 1
 
-        if game.bombCount == 0:   
-            lX = random.randrange(0, game.size)
-            lY = random.randrange(0, game.size)
-            
-            #prevent bomb from spawning in a enemy
-            while isinstance(game.table[lY][lX], Enemy):
-                lX = random.randrange(0, game.size)
-                lY = random.randrange(0, game.size)
-
-            Bomb(lX, lY)
+        game.spawnBomb()
 
     def destroy(self):
         super().destroy()
@@ -207,11 +198,13 @@ class Enemy(GameObject):
 
 #end of Enemy
 
+#only display of bomb, action of bomb is included in Player.doActionBomb()
 class Bomb(GameObject):
     _display = "☼"
 
     def __init__(self, pX, pY):
         super().__init__(pX, pY)
+
 #ADD WALLS CLASS HERE
 
 class GameManager():
@@ -223,7 +216,7 @@ class GameManager():
         self.bombCount = 1
         self.MAX_BOMB = 1
         self.bombCooldown = 0
-        self.BOMB_TIMER = 15
+        self.BOMB_TIMER = 10
 
     def display(self):
         self.__refresh()
@@ -292,6 +285,18 @@ class GameManager():
         
         return self.choice
     
+    def spawnBomb(self):
+        if self.bombCount == 0:   
+            lX = random.randrange(0, self.size)
+            lY = random.randrange(0, self.size)
+            
+            #prevent bomb from spawning on a enemy
+            while isinstance(self.table[lY][lX], Enemy):
+                lX = random.randrange(0, self.size)
+                lY = random.randrange(0, self.size)
+
+            Bomb(lX, lY)
+
     def gameLoop(self):
         while not self.isEnd:
             self.display()
@@ -335,4 +340,3 @@ N_ENEMIES = 10
 game = GameManager(10)
 player = Player(0, 0)
 game.start()
-
