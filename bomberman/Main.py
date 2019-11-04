@@ -117,16 +117,17 @@ class Player(GameObject):
                         game.table[i][j].destroy()
                 j += 1
             i += 1
-           
-        lX = random.randrange(0, game.size)
-        lY = random.randrange(0, game.size)
-        
-        #prevent bomb from spawning in a enemy
-        while isinstance(game.table[lY][lX], Enemy):
+
+        if game.bombCount == 0:   
             lX = random.randrange(0, game.size)
             lY = random.randrange(0, game.size)
+            
+            #prevent bomb from spawning in a enemy
+            while isinstance(game.table[lY][lX], Enemy):
+                lX = random.randrange(0, game.size)
+                lY = random.randrange(0, game.size)
 
-        Bomb(lX, lY)
+            Bomb(lX, lY)
 
     def destroy(self):
         super().destroy()
@@ -311,6 +312,7 @@ class GameManager():
     def lose(self):
         self.display()
         print("DEFEAT !")
+
     def start(self):
         self.display()
         lStart = input("Input anything to play or x to quit > ")
