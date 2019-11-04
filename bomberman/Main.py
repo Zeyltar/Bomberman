@@ -50,6 +50,7 @@ class GameObject():
 
 class Player(GameObject):
     _display = "o"
+
     def __init__(self, pX, pY):
         super().__init__(pX, pY)
 
@@ -90,7 +91,6 @@ class Player(GameObject):
             if isinstance(game.table[lY][lX], Enemy):
                 game.isEnd = True
                 self.destroy()
-                game.display()
                 return
 
         self.x = lX
@@ -176,7 +176,6 @@ class Enemy(GameObject):
         if [self.x, self.y] == [player.x, player.y]:
             game.isEnd = True
             player.destroy()
-            game.display()
             return
         
         self.setSelf()
@@ -193,6 +192,8 @@ class GameManager():
         self.size = pSize
         self.choice = None
         self.isEnd = False
+        self.bombCooldown = 0
+        self.BOMB_TIMER = 3
 
     def display(self):
         self.__refresh()
@@ -238,11 +239,24 @@ class GameManager():
         return lTable
     
     def doChoice(self):
-        self.choice = input("Move : zqsd | Bomb : b | Quit : x > ")
-        while self.choice != 'z' and self.choice != 'q' and self.choice != 's' and self.choice != 'd' and self.choice != 'b':
-            if self.choice == "x":
-                exit()
+        if self.bombCooldown == 0:
             self.choice = input("Move : zqsd | Bomb : b | Quit : x > ")
+            while self.choice != 'z' and self.choice != 'q' and self.choice != 's' and self.choice != 'd' and self.choice != 'b':
+                if self.choice == "x":
+                    exit()
+                self.choice = input("Move : zqsd | Bomb : b | Quit : x > ")
+            if self.choice == "b":
+                self.bombCooldown = self.BOMB_TIMER
+        else:
+            print("Bomb : up in", self.bombCooldown, "moves ")
+            self.choice = input("Move : zqsd | Quit : x > ")
+            while self.choice != 'z' and self.choice != 'q' and self.choice != 's' and self.choice != 'd':
+                if self.choice == "x":
+                    exit()
+                self.choice = input("Move : zqsd | Quit : x > ")
+                
+            self.bombCooldown -= 1
+        
         return self.choice
     
     def gameLoop(self):
@@ -252,7 +266,15 @@ class GameManager():
             player.doAction()
             Enemy.doActionAll()
 
-        print("You lose!")
+            if len(Enemy.list) == 0:
+                self.isEnd = True
+
+        if player == None:
+            self.display()
+            print("DEFEAT !")
+        else:
+            self.display()
+            print("Victory !")
     
     def start(self):
         self.display()
@@ -268,11 +290,8 @@ class GameManager():
         return
 #end of GameManager
 
-
-
-
-N_ENEMIES = 40
-game = GameManager(20)
+N_ENEMIES = 5
+game = GameManager(10)
 player = Player(0, 0)
 game.start()
 
