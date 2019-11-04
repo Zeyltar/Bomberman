@@ -1,7 +1,7 @@
 import random
 import os
 
-class GameObject():
+class GameObject(object):
     _display = ''
 
     def __init__(self, pX, pY):
@@ -44,7 +44,6 @@ class GameObject():
 
     def destroy(self):
         self.removeSelf()
-        self = None
 
 #end of GameObject
 
@@ -85,20 +84,24 @@ class Player(GameObject):
                 lX += 1
 
         if game.choice == 'b':
-            self.bomb()
+            self.doActionBomb()
 
-        if game.table[lY][lX] != 0:
-            if isinstance(game.table[lY][lX], Enemy):
-                game.isEnd = True
-                self.destroy()
-                return
+        if isinstance(game.table[lY][lX], Enemy):
+            game.isEnd = True
+            self.destroy()
+            return
+        
+        if isinstance(game.table[lY][lX], Bomb) and game.bombCount < game.MAX_BOMB:
+            game.bombCount += 1
+            game.bombCooldown = 0
+            game.table[lY][lX].destroy()
 
         self.x = lX
         self.y = lY
 
         self.setSelf()
 
-    def bomb(self):
+    def doActionBomb(self):
         i = 0
         while i < game.size:
             j = 0
@@ -114,7 +117,19 @@ class Player(GameObject):
                         game.table[i][j].destroy()
                 j += 1
             i += 1
+           
+        lX = random.randrange(0, game.size)
+        lY = random.randrange(0, game.size)
+        
+        #prevent bomb from spawning in a enemy
+        while isinstance(game.table[lY][lX], Enemy):
+            lX = random.randrange(0, game.size)
+            lY = random.randrange(0, game.size)
 
+        Bomb(lX, lY)
+
+    def destroy(self):
+        super().destroy()
 
 #end of Player
 
@@ -149,30 +164,35 @@ class Enemy(GameObject):
     
     def doAction(self):
         super().doAction()
+        lX = self.x
+        lY = self.y
 
         if random.random() < 0.5:
             if random.random() < 0.5:
                 if self.getRight():
-                    self.x += 1
+                    lX += 1
                 else:
-                    self.x -= 1
+                    lX -= 1
             else:
                 if self.getLeft():
-                    self.x -= 1
+                    lX -= 1
                 else:
-                    self.x += 1
+                    lX += 1
         else:
             if random.random() < 0.5:
                 if self.getBottom():
-                    self.y += 1
+                    lY += 1
                 else:
-                    self.y -= 1
+                    lY -= 1
             else:
                 if self.getTop():
-                    self.y -= 1
+                    lY -= 1
                 else:
-                    self.y += 1
+                    lY += 1
 
+        self.x = lX
+        self.y = lY
+        
         if [self.x, self.y] == [player.x, player.y]:
             game.isEnd = True
             player.destroy()
@@ -186,6 +206,11 @@ class Enemy(GameObject):
 
 #end of Enemy
 
+class Bomb(GameObject):
+    _display = "☼"
+
+    def __init__(self, pX, pY):
+        super().__init__(pX, pY)
 #ADD WALLS CLASS HERE
 
 class GameManager():
@@ -194,8 +219,10 @@ class GameManager():
         self.size = pSize
         self.choice = None
         self.isEnd = False
+        self.bombCount = 1
+        self.MAX_BOMB = 1
         self.bombCooldown = 0
-        self.BOMB_TIMER = 3
+        self.BOMB_TIMER = 15
 
     def display(self):
         self.__refresh()
@@ -241,7 +268,7 @@ class GameManager():
         return lTable
     
     def doChoice(self):
-        if self.bombCooldown == 0:
+        if self.bombCooldown == 0 and self.bombCount > 0:
             self.choice = input("Move : zqsd | Bomb : b | Quit : x > ")
             while self.choice != 'z' and self.choice != 'q' and self.choice != 's' and self.choice != 'd' and self.choice != 'b':
                 if self.choice == "x":
@@ -249,6 +276,7 @@ class GameManager():
                 self.choice = input("Move : zqsd | Bomb : b | Quit : x > ")
             if self.choice == "b":
                 self.bombCooldown = self.BOMB_TIMER
+                self.bombCount -= 1
         else:
             print("Bomb : up in", self.bombCooldown, "moves ")
             self.choice = input("Move : zqsd | Quit : x > ")
@@ -258,6 +286,8 @@ class GameManager():
                 self.choice = input("Move : zqsd | Quit : x > ")
                 
             self.bombCooldown -= 1
+            if self.bombCooldown == 0:
+                self.bombCount += 1
         
         return self.choice
     
@@ -266,33 +296,32 @@ class GameManager():
             self.display()
             self.doChoice()
             player.doAction()
-            Enemy.doActionAll()
+            Enemy.doActionAll()         
 
             if len(Enemy.list) == 0:
                 self.isEnd = True
+                self.win()
+                return
+        self.lose()
 
-        if player == None:
-            self.display()
-            print("DEFEAT !")
-        else:
-            self.display()
-            print("Victory !")
+    def win(self):
+        self.display()
+        print("Victory !")
     
+    def lose(self):
+        self.display()
+        print("DEFEAT !")
     def start(self):
         self.display()
-        lStart = input("Press space to play or x to quit > ")
-        while lStart != " ":
-            if lStart == "x":
-                exit()
-            self.display()
-            lStart = input("Press space to play or x to quit > ")
-
+        lStart = input("Input anything to play or x to quit > ")
+        if lStart == "x":
+            exit()
         Enemy.createEnemies(N_ENEMIES)
         game.gameLoop()
         return
 #end of GameManager
 
-N_ENEMIES = 5
+N_ENEMIES = 10
 game = GameManager(10)
 player = Player(0, 0)
 game.start()
