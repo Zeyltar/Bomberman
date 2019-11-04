@@ -186,6 +186,8 @@ class Enemy(GameObject):
 
 #end of Enemy
 
+#ADD WALLS CLASS HERE
+
 class GameManager():
     def __init__(self, pSize):
         self.table = self.createTable(pSize)
