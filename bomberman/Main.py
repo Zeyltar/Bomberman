@@ -308,10 +308,18 @@ class GameManager():
     def win(self):
         self.display()
         print("Victory !")
-    
+        lStart = input("Input x to quit > ")
+        while lStart != "x":
+            lStart = input("Input x to quit > ")
+        exit()
+
     def lose(self):
         self.display()
         print("DEFEAT !")
+        lStart = input("Input x to quit > ")
+        while lStart != "x":
+            lStart = input("Input x to quit > ")
+        exit()
 
     def start(self):
         self.display()
