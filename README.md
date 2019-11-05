@@ -3,7 +3,7 @@
 ---
 ## TODO
 - Separate classes in multiples files
-- ~Add walls features~
+- ~Add walls features~ (Done)
 - Diffculties (Map size, number of wall/ennemies)
-- Add a point system maybe
+- Add a score system
 - Replay function
