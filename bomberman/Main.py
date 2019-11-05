@@ -86,6 +86,7 @@ class Player(GameObject):
         if game.choice == 'b':
             self.doActionBomb()
 
+        #game ends if player walk in an enemy
         if isinstance(game.table[lY][lX], Enemy):
             game.isEnd = True
             self.destroy()
@@ -96,12 +97,18 @@ class Player(GameObject):
             game.bombCooldown = 0
             game.table[lY][lX].destroy()
 
+        #if player tries to walk in a wall
+        if isinstance(game.table[lY][lX], Wall):
+            game.doChoice()
+            self.doAction()
+            return
+
         self.x = lX
         self.y = lY
 
         self.setSelf()
 
-    #can destroy walls too
+    #can destroy walls too (why not '-')
     def doActionBomb(self):
         i = 0
         while i < game.size:
@@ -207,6 +214,7 @@ class Bomb(GameObject):
         super().__init__(pX, pY)
 
 #ADD WALLS CLASS HERE
+#enemies can override a wall when momving on it in the game table
 class Wall(GameObject):
     list = []
     _display = "■"
@@ -243,6 +251,10 @@ class Wall(GameObject):
             Wall.list.append(lWall)
 
             count += 1
+    
+    def destroy(self):
+        Wall.list.remove(self)
+        super().destroy()
 
 class GameManager():
     def __init__(self, pSize):
