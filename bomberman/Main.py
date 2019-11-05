@@ -208,15 +208,16 @@ class Enemy(GameObject):
 
 #end of Enemy
 
-#only display of bomb, action of bomb is included in Player.doActionBomb()
+#only display of bomb, action of bomb is included in Player -> doActionBomb() or GameManager -> spawnBomb()
 class Bomb(GameObject):
     _display = "☼"
 
     def __init__(self, pX, pY):
         super().__init__(pX, pY)
+#end of Bomb
 
 #ADD WALLS CLASS HERE
-#enemies can override a wall when momving on it in the game table
+#enemies can override a wall when moving on it in the game table
 class Wall(GameObject):
     list = []
     _display = "■"
@@ -257,6 +258,7 @@ class Wall(GameObject):
     def destroy(self):
         Wall.list.remove(self)
         super().destroy()
+#end of Wall
 
 class GameManager():
     def __init__(self, pSize):
