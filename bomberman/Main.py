@@ -190,14 +190,16 @@ class Enemy(GameObject):
                 else:
                     lY += 1
 
-        self.x = lX
-        self.y = lY
-        
-        if [self.x, self.y] == [player.x, player.y]:
+        if isinstance(game.table[lY][lX], Player):
             game.isEnd = True
             player.destroy()
-            return
-        
+
+        if isinstance(game.table[lY][lX], Wall):
+            game.table[lY][lX].destroy()
+
+        self.x = lX
+        self.y = lY
+                
         self.setSelf()
 
     def destroy(self):
