@@ -86,6 +86,7 @@ class Player(GameObject):
         if game.choice == 'b':
             self.doActionBomb()
 
+        #game ends if player walk in an enemy
         if isinstance(game.table[lY][lX], Enemy):
             game.isEnd = True
             self.destroy()
@@ -96,11 +97,18 @@ class Player(GameObject):
             game.bombCooldown = 0
             game.table[lY][lX].destroy()
 
+        #if player tries to walk in a wall
+        if isinstance(game.table[lY][lX], Wall):
+            game.doChoice()
+            self.doAction()
+            return
+
         self.x = lX
         self.y = lY
 
         self.setSelf()
 
+    #can destroy walls too (why not '-')
     def doActionBomb(self):
         i = 0
         while i < game.size:
@@ -108,12 +116,12 @@ class Player(GameObject):
             while j < game.size:
                 #search enemies on top and bottom
                 if j == self.x and i != self.y:
-                    if isinstance(game.table[i][j], Enemy):
+                    if isinstance(game.table[i][j], Enemy) or isinstance(game.table[i][j], Wall):
                         game.table[i][j].destroy()
                 
                 #search enemies on right and left
                 if i == self.y and j != self.x:
-                    if isinstance(game.table[i][j], Enemy):
+                    if isinstance(game.table[i][j], Enemy) or isinstance(game.table[i][j], Wall):
                         game.table[i][j].destroy()
                 j += 1
             i += 1
@@ -139,8 +147,8 @@ class Enemy(GameObject):
             lX = random.randrange(0, game.size)
             lY = random.randrange(0, game.size)
             
-            #stop enemy from spawning in the player
-            while [lX, lY] == [player.x, player.y]:
+            #stop enemy from spawning in the player/wall/enemy
+            while isinstance(game.table[lY][lX], Player) or isinstance(game.table[lY][lX], Wall) or isinstance(game.table[lY][lX], Enemy):
                 lX = random.randrange(0, game.size)
                 lY = random.randrange(0, game.size)
 
@@ -182,14 +190,16 @@ class Enemy(GameObject):
                 else:
                     lY += 1
 
-        self.x = lX
-        self.y = lY
-        
-        if [self.x, self.y] == [player.x, player.y]:
+        if isinstance(game.table[lY][lX], Player):
             game.isEnd = True
             player.destroy()
-            return
-        
+
+        if isinstance(game.table[lY][lX], Wall):
+            game.table[lY][lX].destroy()
+
+        self.x = lX
+        self.y = lY
+                
         self.setSelf()
 
     def destroy(self):
@@ -206,6 +216,47 @@ class Bomb(GameObject):
         super().__init__(pX, pY)
 
 #ADD WALLS CLASS HERE
+#enemies can override a wall when momving on it in the game table
+class Wall(GameObject):
+    list = []
+    _display = "■"
+    
+    def __init__(self, pX, pY):
+        super().__init__(pX, pY)
+
+    @staticmethod
+    def createGridWalls(pStepX, pStepY, pBorderWidth, pBorderHeight):
+        i = 0
+        while i < game.size:
+            j = 0
+            while j < game.size:
+                #trying to center the grid in function of parameters given
+                if j >= pBorderWidth and j < game.size - pBorderWidth and j % pStepX == 0 and i >= pBorderHeight and i < game.size - pBorderHeight and i % pStepY == 0:
+                    lWall = Wall(j, i)
+                    Wall.list.append(lWall)
+                j += 1
+            i += 1
+    
+    @staticmethod
+    def createRandomWalls(pNumber):
+        count = 0
+        while count < pNumber:
+            lX = random.randrange(0, game.size)
+            lY = random.randrange(0, game.size)
+            
+            #stop wall from spawning in the player/wall/enemy
+            while isinstance(game.table[lY][lX], Player) or isinstance(game.table[lY][lX], Wall) or isinstance(game.table[lY][lX], Enemy):
+                lX = random.randrange(0, game.size)
+                lY = random.randrange(0, game.size)
+
+            lWall = Wall(lX, lY)
+            Wall.list.append(lWall)
+
+            count += 1
+    
+    def destroy(self):
+        Wall.list.remove(self)
+        super().destroy()
 
 class GameManager():
     def __init__(self, pSize):
@@ -213,8 +264,8 @@ class GameManager():
         self.size = pSize
         self.choice = None
         self.isEnd = False
-        self.bombCount = 1
-        self.MAX_BOMB = 1
+        self.bombCount = 3
+        self.MAX_BOMB = 3
         self.bombCooldown = 0
         self.BOMB_TIMER = 10
 
@@ -269,8 +320,10 @@ class GameManager():
                     exit()
                 self.choice = input("Move : zqsd | Bomb : b | Quit : x > ")
             if self.choice == "b":
-                self.bombCooldown = self.BOMB_TIMER
                 self.bombCount -= 1
+                if self.bombCount == 0:
+                    self.bombCooldown = self.BOMB_TIMER
+                
         else:
             print("Bomb : up in", self.bombCooldown, "moves ")
             self.choice = input("Move : zqsd | Quit : x > ")
@@ -291,7 +344,7 @@ class GameManager():
             lY = random.randrange(0, self.size)
             
             #prevent bomb from spawning on a enemy
-            while isinstance(self.table[lY][lX], Enemy):
+            while isinstance(self.table[lY][lX], Enemy) and isinstance(game.table[lY][lX], Wall):
                 lX = random.randrange(0, self.size)
                 lY = random.randrange(0, self.size)
 
@@ -331,12 +384,14 @@ class GameManager():
         lStart = input("Input anything to play or x to quit > ")
         if lStart == "x":
             exit()
+        Wall.createGridWalls(1, 1, 3, 3)
+        Wall.createRandomWalls(20)
         Enemy.createEnemies(N_ENEMIES)
         game.gameLoop()
         return
 #end of GameManager
 
 N_ENEMIES = 10
-game = GameManager(10)
+game = GameManager(15)
 player = Player(0, 0)
 game.start()
