@@ -91,7 +91,8 @@ class Player(GameObject):
             game.isEnd = True
             self.destroy()
             return
-        
+
+        #gather the bomb if player walks on it
         if isinstance(game.table[lY][lX], Bomb) and game.bombCount < game.MAX_BOMB:
             game.bombCount += 1
             game.bombCooldown = 0
@@ -217,7 +218,7 @@ class Bomb(GameObject):
 #end of Bomb
 
 #ADD WALLS CLASS HERE
-#enemies can override a wall when moving on it in the game table
+#enemies can destroy a wall when moving on it in the game table
 class Wall(GameObject):
     list = []
     _display = "■"
